@@ -7,7 +7,8 @@ const {
     updateProduct, 
     findProductById, 
     getProduct, 
-    getProducts, 
+    getProducts,
+    getSearch, 
     getRelatedProducts,
     getProductCategories,
     getProductsByFilter,
@@ -23,6 +24,8 @@ router.param("productId", findProductById);
 router.get("/products/:productId", getProduct);
 
 router.get("/products", getProducts);
+
+router.get("/search", getSearch);
 
 router.get("/products/related/:productId", getRelatedProducts);
 
