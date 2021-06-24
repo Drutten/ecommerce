@@ -8,7 +8,9 @@ const defaultLimit = 9;
 
 
 exports.findProductById = (req, res, next, id) => { // last parameter from route param
-    Product.findById(id).exec((err, product) => {
+    Product.findById(id)
+    .populate("category")
+    .exec((err, product) => {
         if (err || !product) {
             return res.status(404).json({
                 error: "Produkten hittades inte"   
@@ -67,7 +69,8 @@ exports.getSearch = (req, res) => {
     })
     .select('-image')
     .sort([[sort, order]])
-    .limit(limit);
+    .limit(limit)
+    .populate("category");
 }
 
 
