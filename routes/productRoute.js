@@ -11,7 +11,6 @@ const {
     getSearch, 
     getRelatedProducts,
     getProductCategories,
-    getProductsByFilter,
     getImage
 } = require("../controllers/productController");
 const {findUserById} = require("../controllers/userController");
@@ -33,7 +32,6 @@ router.get("/products/distinct/categories", getProductCategories);
 
 router.get("/products/image/:productId", getImage);
 
-router.post("/products/filter", getProductsByFilter);// fix. filter not search
 
 router.post(
     "/products/create/:userId",

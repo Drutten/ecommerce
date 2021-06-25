@@ -104,48 +104,6 @@ exports.getProductCategories = (req, res) => {
 }
 
 
-exports.getProductsByFilter = (req, res) => {
-    let order = req.body.order ? req.body.order : "desc";
-    let sort = req.body.sort ? req.body.sort : "_id";
-    let limit = req.body.limit ? +req.body.limit : defaultLimit;
-    let skip = +req.body.skip;
-    let findArgs = {};
-
-    for (let key in req.body.filters) {
-        if (req.body.filters[key].length > 0) {
-            if (key === "price") {
-                // gte -  greater than price [0-10]
-                // lte - less than
-                findArgs[key] = {
-                    $gte: req.body.filters[key][0],
-                    $lte: req.body.filters[key][1]
-                };
-            } else {
-                findArgs[key] = req.body.filters[key];
-            }
-        }
-    }
-
-    Product.find(findArgs)
-    .select("-image")
-    .populate("category")
-    .sort([[sort, order]])
-    .skip(skip)
-    .limit(limit)
-    .exec((err, result) => {
-        if (err) {
-            return res.status(400).json({
-                error: "Produkterna kunde inte hämtas"
-            });
-        }
-        res.json({
-            size: result.length, // num products
-            result
-        });
-    });
-}
-
-
 exports.getImage = (req, res, next) => {
     if (req.product.image.data) {
         res.set('Content-Type', req.product.image.contentType);
