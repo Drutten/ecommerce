@@ -38,3 +38,34 @@ exports.updateUser = (req, res) => {
         }
     )
 }
+
+
+exports.updateUserHistory = (req, res, next) => {
+    const history = [];
+    req.body.order.products.forEach(item => {
+        history.push({
+            _id: item._id,
+            name: item.name,
+            description: item.description,
+            price: item.price,
+            category: item.category,
+            quantity: item.amount,
+            transaction_id: req.body.order.transaction_id,
+            amount: req.body.order.amount
+        });
+    });
+
+    User.findOneAndUpdate(
+        {_id: req.profile._id},
+        {$push: {history: history}},
+        {new: true},
+        (error, result) => {
+            if (error) {
+                return res.status(400).json({
+                    error: 'Historiken kunde inte uppdateras'
+                });
+            }
+            next();
+        }
+    );
+}

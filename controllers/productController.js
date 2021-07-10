@@ -207,3 +207,23 @@ exports.updateProduct = (req, res) => {
         })
     });    
 }
+
+
+exports.updateSoldProductQuantity = (req, res, next) => {
+    const bulkOps = req.body.order.products.map(item => {
+        return {
+            updateOne: {
+                filter: {_id: item._id},
+                update: {$inc: {quantity: -item.amount, popularity: +item.amount}}
+            }
+        }
+    });
+    Product.bulkWrite(bulkOps, {}, (error, result) => {
+        if (error) {
+            return res.status(400).json({
+                error: 'Produkterna kunde inte uppdateras'
+            });
+        }
+        next();
+    });
+}
