@@ -29,7 +29,7 @@ exports.getProduct = (req, res) => {
 
 
 exports.getProducts = (req, res) => {
-    let order = req.query.order ? req.query.order : "asc";
+    let order = req.query.order ? req.query.order : "desc";
     let sort = req.query.sort ? req.query.sort : "_id";
     let limit = req.query.limit ? +req.query.limit : defaultLimit;
 
@@ -49,16 +49,36 @@ exports.getProducts = (req, res) => {
 }
 
 
+exports.getProductsByCategory = (req, res) => {
+    let order = req.body.order ? req.body.order : "desc";
+    let sort = req.body.sort ? req.body.sort : "_id";
+    let limit = req.body.limit ? +req.body.limit : defaultLimit;
+
+    Product.find({category: req.body.category})
+    .select("-image")
+    .populate("category")
+    .sort([[sort, order]])
+    .limit(limit)
+    .exec((err, result) => {
+        if (err) {
+            return res.status(400).json({
+                error: "Produkterna kunde inte hämtas"
+            });
+        }
+        res.json(result);
+    });
+}
+
+
 exports.getSearch = (req, res) => {
-    let order = req.query.order ? req.query.order : "asc";
+    let order = req.query.order ? req.query.order : "desc";
     let sort = req.query.sort ? req.query.sort : "_id";
     let limit = req.query.limit ? +req.query.limit : defaultLimit;
     let search = {};
     if (req.query.search) {
         search = {name: {$regex: req.query.search, $options: 'i'}};
     }
-    // else if (req.query.category) {}
-    // find the products based on query object
+
     Product.find(search, (err, products) => {
         if (err) {
             return res.status(400).json({
