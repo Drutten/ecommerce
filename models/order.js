@@ -1,5 +1,4 @@
 const mongoose = require("mongoose");
-const Schema = mongoose.Schema;
 const { ObjectId } = mongoose.Schema;
  
 const CartItemSchema = new mongoose.Schema(
@@ -27,8 +26,8 @@ const OrderSchema = new mongoose.Schema(
     address: String,
     status: {
       type: String,
-      default: "Not processed",
-      enum: ["Not processed", "Processing", "Shipped", "Delivered", "Cancelled"]
+      default: "Ny",
+      enum: ["Ny", "Behandlas", "Skickad", "Levererad", "Makulerad"]
     },
     updated: Date,
     user: { 
