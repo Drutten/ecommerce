@@ -17,11 +17,15 @@ const orderRoute = require("./routes/orderRoute");
 const app = express();
 
 // db
-mongoose.connect(process.env.DATABASE, {
+mongoose
+  .connect(process.env.DATABASE, {
     useNewUrlParser: true,
+    useUnifiedTopology: true,
     useCreateIndex: true,
-    useFindAndModify: false
-}).then(() => console.log("DB Connected"));
+    useFindAndModify: false,
+  })
+  .then(() => console.log("DB connected"))
+  .catch((err) => console.log(err));
 
 // middleware
 app.use(morgan("dev"));
