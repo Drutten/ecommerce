@@ -65,3 +65,18 @@ exports.findOrderById = (req, res, next, id) => {
         next();
     })
 }
+
+
+exports.getOrdersByUserId = (req, res) => {
+    Order.find({user: req.profile._id})
+    .populate('user', '_id name')
+    .sort([['createdAt', 'desc']])
+    .exec((err, orders) => {
+        if (err) {
+            return res.status(400).json({
+                error: errorHandler(err)
+            });
+        }
+        res.json(orders);
+    });
+}

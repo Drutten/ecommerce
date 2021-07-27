@@ -22,22 +22,46 @@ exports.getUser = (req, res) => {
 
 
 exports.updateUser = (req, res) => {
-    User.findOneAndUpdate(
-        {_id: req.profile._id},
-        {$set: req.body},
-        {new: true},
-        (err, result) => {
+    console.log('UPDATE USER - req.user', req.user, 'UPDATE DATA', req.body);
+    const { name, password } = req.body;
+ 
+    User.findOne({ _id: req.profile._id }, (err, user) => {
+        if (err || !user) {
+            return res.status(400).json({
+                error: "Profilen kunde inte hittas"
+            });
+        }
+        if (!name) {
+            return res.status(400).json({
+                error: "Namn är obligatoriskt"
+            });
+        } else {
+            user.name = name;
+        }
+ 
+        if (password) {
+            if (password.length < 6) {
+                return res.status(400).json({
+                    error: "Lösenordet måste innehålla minst 6 tecken"
+                });
+            } else {
+                user.password = password;
+            }
+        }
+ 
+        user.save((err, updatedUser) => {
             if (err) {
+                console.log("USER UPDATE ERROR", err);
                 return res.status(400).json({
                     error: "Profilen kunde inte uppdateras"
                 });
             }
-            result.hashed_password = undefined;
-            result.salt = undefined;
-            res.json(result);
-        }
-    )
-}
+            updatedUser.hashed_password = undefined;
+            updatedUser.salt = undefined;
+            res.json(updatedUser);
+        });
+    });
+};
 
 
 exports.updateUserHistory = (req, res, next) => {

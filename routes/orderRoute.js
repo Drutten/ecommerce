@@ -7,7 +7,8 @@ const {
     createOrder, 
     updateOrderStatus, 
     getOrders, 
-    getStatusOptions 
+    getStatusOptions,
+    getOrdersByUserId 
 } = require("../controllers/orderController");
 const {updateSoldProductQuantity} = require("../controllers/productController");
 
@@ -33,6 +34,8 @@ router.put(
 );
 
 router.get('/orders/all/:userId', requireSignin, isAuth, isAdmin, getOrders);
+
+router.get('/orders/user/:userId', requireSignin, isAuth, getOrdersByUserId);
 
 router.get(
     '/orders/status-options/:userId', 
