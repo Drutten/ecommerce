@@ -1,5 +1,4 @@
 const {Order, CartItem} = require('../models/order');
-const User = require("../models/user");
 const {errorHandler} = require("../helperMethods/errorHandler");
 require("dotenv").config();
 

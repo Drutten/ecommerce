@@ -197,13 +197,7 @@ exports.updateProduct = (req, res) => {
                 error: "Bilden kunde inte laddas"
             });
         }
-        // validate
-        const {name, description, price, category, quantity, shipping} = fields;
-        if (!name || !description || !price || !category || !quantity || ! shipping) {
-            return res.status(400).json({
-                error: "Det saknas uppgifter"
-            });
-        }
+        // TODO Validation
         let product = req.product;
         product = _.extend(product, fields);
 
