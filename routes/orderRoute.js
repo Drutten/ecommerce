@@ -6,7 +6,8 @@ const {
     findOrderById, 
     createOrder, 
     updateOrderStatus, 
-    getOrders, 
+    getOrders,
+    deleteOrder, 
     getStatusOptions,
     getOrdersByUserId 
 } = require("../controllers/orderController");
@@ -43,6 +44,14 @@ router.get(
     isAuth, 
     isAdmin, 
     getStatusOptions
+);
+
+router.delete(
+    "/orders/:orderId/:userId", 
+    requireSignin,
+    isAuth,
+    isAdmin,
+    deleteOrder
 );
 
 module.exports = router;

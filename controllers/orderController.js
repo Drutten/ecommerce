@@ -79,3 +79,18 @@ exports.getOrdersByUserId = (req, res) => {
         res.json(orders);
     });
 }
+
+
+exports.deleteOrder = (req, res) => {
+    let order = req.order;
+    order.remove((err, order) => {
+        if (err) {
+            return res.status(400).json({
+                error: errorHandler(err)
+            });
+        }
+        res.json({
+            message: "Ordern har tagits bort"
+        });
+    })
+}
