@@ -124,6 +124,21 @@ exports.getProductCategories = (req, res) => {
 }
 
 
+exports.getProductsByIds = async (req, res) => {
+    const ids = (req.body.ids) ? req.body.ids : [];
+    try {
+        const products = await Product.find({
+            '_id': { $in: ids }
+        }).select("-image").exec();
+        res.json(products);
+    } catch(err) {
+        return res.status(400).json({
+            error: "Produkterna kunde inte hämtas"
+        });
+    }
+}
+
+
 exports.getImage = (req, res, next) => {
     if (req.product.image.data) {
         res.set('Content-Type', req.product.image.contentType);
