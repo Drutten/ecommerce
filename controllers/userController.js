@@ -1,17 +1,24 @@
 const User = require("../models/user");
 
 
-exports.findUserById = (req, res, next, id) => {
-    User.findById(id).exec((err, user) => {
-        if (err || !user) {
-            return res.status(400).json({
+
+exports.findUserById = async (req, res, next, id) => {
+    try {
+        const user = await User.findById(id).exec();
+        if (!user) {
+            return res.status(404).json({
                 error: "Användaren hittades inte"
             })
         }
         req.profile = user; // save user on req object
         next();
-    });
+    } catch(err) {
+        return res.status(400).json({
+            error: "Användaren hittades inte"
+        })
+    } 
 };
+
 
 
 exports.getUser = (req, res) => {
@@ -21,15 +28,17 @@ exports.getUser = (req, res) => {
 }
 
 
-exports.updateUser = (req, res) => {
-    console.log('UPDATE USER - req.user', req.user, 'UPDATE DATA', req.body);
+
+exports.updateUser = async (req, res) => {
     const { name, password } = req.body;
- 
-    User.findOne({ _id: req.profile._id }, (err, user) => {
-        if (err || !user) {
+    let user = null;
+
+    try {
+        user = await User.findOne({ _id: req.profile._id });
+        if (!user) {
             return res.status(400).json({
                 error: "Profilen kunde inte hittas"
-            });
+            });   
         }
         if (!name) {
             return res.status(400).json({
@@ -38,7 +47,6 @@ exports.updateUser = (req, res) => {
         } else {
             user.name = name;
         }
- 
         if (password) {
             if (password.length < 6) {
                 return res.status(400).json({
@@ -48,23 +56,27 @@ exports.updateUser = (req, res) => {
                 user.password = password;
             }
         }
- 
-        user.save((err, updatedUser) => {
-            if (err) {
-                console.log("USER UPDATE ERROR", err);
-                return res.status(400).json({
-                    error: "Profilen kunde inte uppdateras"
-                });
-            }
-            updatedUser.hashed_password = undefined;
-            updatedUser.salt = undefined;
-            res.json(updatedUser);
+    } catch(err) {
+        return res.status(500).json({
+            error: "Internt serverfel"
         });
-    });
+    }
+
+    try {
+        const updatedUser = await user.save();
+        updatedUser.hashed_password = undefined;
+        updatedUser.salt = undefined;
+        res.json(updatedUser);
+    } catch(err) {
+        return res.status(400).json({
+            error: "Profilen kunde inte uppdateras"
+        });
+    }
 };
 
 
-exports.updateUserHistory = (req, res, next) => {
+
+exports.updateUserHistory = async (req, res, next) => {
     const history = [];
     req.body.order.products.forEach(item => {
         history.push({
@@ -78,18 +90,17 @@ exports.updateUserHistory = (req, res, next) => {
             amount: req.body.order.amount
         });
     });
-
-    User.findOneAndUpdate(
-        {_id: req.profile._id},
-        {$push: {history: history}},
-        {new: true},
-        (error, result) => {
-            if (error) {
-                return res.status(400).json({
-                    error: 'Historiken kunde inte uppdateras'
-                });
-            }
-            next();
-        }
-    );
+    try {
+        await User.findOneAndUpdate(
+            {_id: req.profile._id},
+            {$push: {history: history}},
+            {new: true}
+        );
+        console.log('Document updated');
+        next();
+    } catch (err) {
+        return res.status(400).json({
+            error: 'Historiken kunde inte uppdateras'
+        });   
+    }   
 }
