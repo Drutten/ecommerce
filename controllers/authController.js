@@ -4,36 +4,36 @@ const User = require("../models/user");
 const {errorHandler} = require("../helperMethods/errorHandler");
 
 
-exports.signup = (req, res) => {
-    const user = new User(req.body);
-    user.save((err, user) => {
-        if (err) {
-            // do not save
-            return res.status(400).json({
-                error: errorHandler(err)
-            });
-        }
+
+exports.signup = async(req, res) => {
+    const newUser = new User(req.body);
+    try {
+        const user = await newUser.save();
         user.salt = undefined;
         user.hashed_password = undefined;
         res.json({
             user
         });
-    });
+    } catch(err) {
+        return res.status(400).json({
+            error: errorHandler(err)
+        });   
+    }
 }
 
-exports.signin = (req, res) => {
-    // find user based on email
-    const {email, password} = req.body;
-    
-    User.findOne({email}, (err, user) => {
-        if (err || !user) {
+
+
+exports.signin = async(req, res) => { 
+    try {
+        const userEmail = req.body.email;
+        const password = req.body.password;
+        const user = await User.findOne({email: userEmail}).exec();
+        if (!user) {
             return res.status(400).json({
                 error: "Användaren hittades inte. Skapa ett konto för att logga in."
             })
         }
-        // if user exists password must match
         if (!user.authenticate(password)) {
-            // unauthorized 401
             return res.status(401).json({
                 error: "Felaktiga inloggningsuppgifter."
             })
@@ -45,13 +45,21 @@ exports.signin = (req, res) => {
         // return user and token to client
         const {_id, name, email, role} = user;
         return res.json({token, user: {_id, name, email, role}});
-    });
+    } catch(err) {
+        return res.status(400).json({
+            error: "Inloggningen misslyckades."
+        })   
+    }
 }
+
+
 
 exports.signout = (req, res) => {
     res.clearCookie("token");
     res.json({message: "Utloggad"});
 }
+
+
 
 exports.requireSignin = expressJwt({
     secret: process.env.JWT_SECRET,
@@ -59,8 +67,10 @@ exports.requireSignin = expressJwt({
     userProperty: "auth"
 });
 
+
+
 exports.isAuth = (req, res, next) => {
-    let isAuthenticated = req.profile && req.auth && req.profile._id == req.auth._id;
+    let isAuthenticated = req.profile && req.auth && req.profile._id == req.auth._id; // Important! Only equal value, not equal type
     if (!isAuthenticated) {
         return res.status(403).json({
             error: "Åtkomst nekad"
@@ -68,6 +78,8 @@ exports.isAuth = (req, res, next) => {
     }
     next();
 }
+
+
 
 exports.isAdmin = (req, res, next) => {
     if (req.profile.role === 0) {
