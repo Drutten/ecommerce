@@ -15,5 +15,5 @@ The project was created with
 
 ## Sources
 
-I have learned from a course at Udemy by Ryan Dhungel and I have applied some of the things I learned in this project.
+I have learned from a course at Udemy by Ryan Dhungel and I have applied some of the things I learned in the project.
 [MERN Stack React Node E-commerce from Scratch to Deoplyment](https://www.udemy.com/course/react-node-ecommerce/)
