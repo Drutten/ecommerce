@@ -8,9 +8,7 @@ const {
     findProductById, 
     getProduct, 
     getProducts,
-    getSearch, 
-    getRelatedProducts,
-    getProductCategories,
+    getSearch,
     getImage,
     getProductsByCategory,
     getProductsByIds
