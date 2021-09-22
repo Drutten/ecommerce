@@ -3,18 +3,19 @@ const {errorHandler} = require("../helperMethods/errorHandler");
 require("dotenv").config();
 
 
-exports.getOrders = (req, res) => {
-    Order.find()
-    .populate('user', '_id name address')
-    .sort([['createdAt', 'desc']])
-    .exec((error, result) => {
-        if (error) {
-            return res.status(400).json({
-                error: errorHandler(error)
-            });
-        }
+
+exports.getOrders = async (req, res) => {
+    try {
+        const result = await Order.find()
+        .populate('user', '_id name address')
+        .sort([['createdAt', 'desc']])
+        .exec();
         res.json(result);
-    });
+    } catch(err) {
+        return res.status(400).json({
+            error: errorHandler(err)
+        });
+    }
 }
 
 
@@ -23,74 +24,85 @@ exports.getStatusOptions = (req, res) => {
 }
 
 
-exports.createOrder = (req, res) => {
+
+exports.createOrder = async (req, res) => {
     req.body.order.user = req.profile;
     const order = new Order(req.body.order);
-    order.save((err, result) => {
-        if (err) {
-            return res.status(400).json({
-                error: errorHandler(err)
-            })
-        }
+    try {
+        const result = await order.save();
         res.json(result);
-    })
+    } catch(err) {
+        return res.status(400).json({
+            error: errorHandler(err)
+        });    
+    }
 }
 
 
-exports.updateOrderStatus = (req, res) => {
-    Order.updateOne(
-        {_id: req.body.orderId}, 
-        {$set: {status: req.body.status}}, (err, order) => {
-            if (err) {
-                return res.status(400).json({
-                    error: errorHandler(err)
-                });
-            }
-            res.json(order);
-        })
+
+exports.updateOrderStatus = async (req, res) => {
+    try {
+        const order = await Order.updateOne(
+            {_id: req.body.orderId}, 
+            {$set: {status: req.body.status}}
+        );
+        res.json(order);
+    } catch(err) {
+        return res.status(400).json({
+            error: errorHandler(err)
+        });
+    }
 }
 
 
-exports.findOrderById = (req, res, next, id) => {
-    Order.findById(id)
-    .populate('products.product', 'name price')
-    .exec((err, order) => {
-        if (err || !order) {
-            return res.status(400).json({
-                error: errorHandler(err)
-            });
+
+exports.findOrderById = async (req, res, next, id) => {
+    try {
+        const order = await Order.findById(id)
+        .populate('products.product', 'name price')
+        .exec();
+        if (!order) {
+            return res.status(404).json({
+                error: "Ordern hittades inte"   
+            });    
         }
         req.order = order;
         next();
-    })
+    } catch(err) {
+        return res.status(400).json({
+            error: "Ordern hittades inte"
+        });    
+    }
 }
 
 
-exports.getOrdersByUserId = (req, res) => {
-    Order.find({user: req.profile._id})
-    .populate('user', '_id name')
-    .sort([['createdAt', 'desc']])
-    .exec((err, orders) => {
-        if (err) {
-            return res.status(400).json({
-                error: errorHandler(err)
-            });
-        }
-        res.json(orders);
-    });
+
+exports.getOrdersByUserId = async (req, res) => {
+    try {
+        const result = await Order.find({user: req.profile._id})
+        .populate('user', '_id name')
+        .sort([['createdAt', 'desc']])
+        .exec();
+        res.json(result);
+    } catch(err) {
+        return res.status(400).json({
+            error: errorHandler(err)
+        });
+    }
 }
 
 
-exports.deleteOrder = (req, res) => {
+
+exports.deleteOrder = async (req, res) => {
     let order = req.order;
-    order.remove((err, order) => {
-        if (err) {
-            return res.status(400).json({
-                error: errorHandler(err)
-            });
-        }
+    try {
+        await order.remove();
         res.json({
             message: "Ordern har tagits bort"
         });
-    })
+    } catch(err) {
+        return res.status(400).json({
+            error: errorHandler(err)
+        });
+    }
 }
