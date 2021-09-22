@@ -1,69 +1,85 @@
 const Category = require("../models/category");
 const {errorHandler} = require("../helperMethods/errorHandler");
-// const { findById } = require("../models/category");
 
-exports.findCategoryById = (req, res, next, id) => {
-    Category.findById(id).exec((err, category) => {
-        if (err || !category) {
+
+
+exports.findCategoryById = async (req, res, next, id) => {
+    try {
+        const category = await Category.findById(id).exec();
+        if (!category) {
             return res.status(404).json({
                 error: "Kategorin hittades inte"
             });
         }
         req.category = category;
         next();
-    })
+    } catch(err) {
+        return res.status(400).json({
+            error: "Kategorin hittades inte"
+        });   
+    }
 }
+
+
 
 exports.getCategory = (req, res) => {
     return res.json(req.category);
 }
 
-exports.getCategories = (req, res) => {
-    Category.find().exec((err, result) => {
-        if (err) {
-            return res.status(400).json({
-                error: errorHandler(err)
-            });
-        }
+
+
+exports.getCategories = async (req, res) => {
+    try {
+        const result = await Category.find().exec();
         res.json(result);
-    })
+    } catch(err) {
+        return res.status(400).json({
+            error: errorHandler(err)
+        });   
+    }
 }
 
-exports.createCategory = (req, res) => {
+
+
+exports.createCategory = async (req, res) => {
     const category = new Category(req.body);
-    category.save((err, result) => {
-        if (err) {
-            return res.status(400).json({
-                error: errorHandler(err)
-            });
-        }
-        res.json({result})
-    });
+    try {
+        const result = await category.save();
+        res.json(result);
+    } catch(err) {
+        return res.status(400).json({
+            error: errorHandler(err)
+        });    
+    }
 }
 
-exports.updateCategory = (req, res) => {
+
+
+exports.updateCategory = async (req, res) => {
     const category = req.category;
     category.name = req.body.name;
-    category.save((err, result) => {
-        if (err) {
-            return res.status(400).json({
-                error: errorHandler(err)
-            })
-        }
+    try {
+        const result = await category.save();
         res.json(result);
-    });
+    } catch(err) {
+        return res.status(400).json({
+            error: errorHandler(err)
+        });   
+    }
 }
 
-exports.deleteCategory = (req, res) => {
-    const category = req.category;
-    category.remove((err, result) => {
-        if (err) {
-            return res.status(400).json({
-                error: errorHandler(err)
-            })
-        }
+
+
+exports.deleteCategory = async (req, res) => {
+    let category = req.category;
+    try {
+        await category.remove();
         res.json({
             message: "Kategorin har tagits bort."
         });
-    });
+    } catch(err) {
+        return res.status(400).json({
+            error: errorHandler(err)
+        })    
+    }
 }

@@ -32,7 +32,6 @@ exports.getUser = (req, res) => {
 exports.updateUser = async (req, res) => {
     const { name, password } = req.body;
     let user = null;
-
     try {
         user = await User.findOne({ _id: req.profile._id });
         if (!user) {
