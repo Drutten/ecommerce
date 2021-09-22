@@ -28,10 +28,6 @@ router.get("/products", getProducts);
 
 router.get("/search", getSearch);
 
-router.get("/products/related/:productId", getRelatedProducts);
-
-router.get("/products/distinct/categories", getProductCategories);
-
 router.get("/products/image/:productId", getImage);
 
 router.post("/filter", getProductsByCategory);

@@ -7,19 +7,26 @@ const {errorHandler} = require("../helperMethods/errorHandler");
 const defaultLimit = 9;
 
 
-exports.findProductById = (req, res, next, id) => { // last parameter from route param
-    Product.findById(id)
-    .populate("category")
-    .exec((err, product) => {
-        if (err || !product) {
+
+exports.findProductById = async (req, res, next, id) => { // last parameter from route param
+    try {
+        const product = await Product.findById(id)
+        .populate("category")
+        .exec();
+        if (!product) {
             return res.status(404).json({
                 error: "Produkten hittades inte"   
             });
         }
         req.product = product;
-        next();
-    });
+        next(); 
+    } catch(err) {
+        return res.status(400).json({
+            error: "Produkten hittades inte"   
+        });    
+    } 
 }
+
 
 
 exports.getProduct = (req, res) => {
@@ -28,49 +35,50 @@ exports.getProduct = (req, res) => {
 }
 
 
-exports.getProducts = (req, res) => {
+
+exports.getProducts = async (req, res) => {
     let order = req.query.order ? req.query.order : "desc";
     let sort = req.query.sort ? req.query.sort : "_id";
     let limit = req.query.limit ? +req.query.limit : defaultLimit;
-
-    Product.find()
-    .select("-image")
-    .populate("category", "_id, name")
-    .sort([[sort, order]])
-    .limit(limit)
-    .exec((err, result) => {
-        if (err) {
-            return res.status(400).json({
-                error: "Produkterna kunde inte hämtas"
-            });
-        }
-        res.json(result);
-    });
+    try {
+        const result = await Product.find()
+        .select("-image")
+        .populate("category", "_id, name")
+        .sort([[sort, order]])
+        .limit(limit)
+        .exec();
+        res.json(result);   
+    } catch(err) {
+        return res.status(400).json({
+            error: "Produkterna kunde inte hämtas"
+        });
+    }
 }
 
 
-exports.getProductsByCategory = (req, res) => {
+
+exports.getProductsByCategory = async (req, res) => {
     let order = req.body.order ? req.body.order : "desc";
     let sort = req.body.sort ? req.body.sort : "_id";
     let limit = req.body.limit ? +req.body.limit : defaultLimit;
-
-    Product.find({category: req.body.category})
-    .select("-image")
-    .populate("category")
-    .sort([[sort, order]])
-    .limit(limit)
-    .exec((err, result) => {
-        if (err) {
-            return res.status(400).json({
-                error: "Produkterna kunde inte hämtas"
-            });
-        }
+    try {
+        const result = await Product.find({category: req.body.category})
+        .select("-image")
+        .populate("category")
+        .sort([[sort, order]])
+        .limit(limit)
+        .exec();
         res.json(result);
-    });
+    } catch(err) {
+        return res.status(400).json({
+            error: "Produkterna kunde inte hämtas"
+        });
+    }
 }
 
 
-exports.getSearch = (req, res) => {
+
+exports.getSearch = async (req, res) => {
     let order = req.query.order ? req.query.order : "desc";
     let sort = req.query.sort ? req.query.sort : "_id";
     let limit = req.query.limit ? +req.query.limit : defaultLimit;
@@ -78,50 +86,20 @@ exports.getSearch = (req, res) => {
     if (req.query.search) {
         search = {name: {$regex: req.query.search, $options: 'i'}};
     }
-
-    Product.find(search, (err, products) => {
-        if (err) {
-            return res.status(400).json({
-                error: "Produkterna kunde inte hämtas"
-            })
-        }
-        res.json(products);
-    })
-    .select('-image')
-    .sort([[sort, order]])
-    .limit(limit)
-    .populate("category");
-}
-
-
-exports.getRelatedProducts = (req, res) => {
-    let limit = req.query.limit ? +req.query.limit : defaultLimit;
-    
-    Product.find({_id: {$ne: req.product}, category: req.product.category})
-    .select("-image")
-    .limit(limit)
-    .populate("category", "_id, name")
-    .exec((err, result) => {
-        if (err) {
-            return res.status(400).json({
-                error: "Produkterna kunde inte hämtas"
-            });
-        }
+    try {
+        const result = await Product.find(search)
+        .select('-image')
+        .sort([[sort, order]])
+        .limit(limit)
+        .populate("category");
         res.json(result);
-    });
+    } catch(err) {
+        return res.status(400).json({
+            error: "Produkterna kunde inte hämtas"
+        })
+    }
 }
 
-
-exports.getProductCategories = (req, res) => {
-    Product.distinct("category", {}, (err, result) => {
-        if (err) {
-            return res.status(400).json({
-                error: "Kategorierna kunde inte hämtas"
-            });
-        }
-        res.json(result);    
-    })
-}
 
 
 exports.getProductsByIds = async (req, res) => {
@@ -139,6 +117,7 @@ exports.getProductsByIds = async (req, res) => {
 }
 
 
+
 exports.getImage = (req, res, next) => {
     if (req.product.image.data) {
         res.set('Content-Type', req.product.image.contentType);
@@ -148,10 +127,11 @@ exports.getImage = (req, res, next) => {
 }
 
 
+
 exports.createProduct = (req, res) => {
     let form = new formidable.IncomingForm();
     form.keepExtensions = true;
-    form.parse(req, (err, fields, files) => {
+    form.parse(req, async (err, fields, files) => {
         if (err) {
             return res.status(400).json({
                 error: "Bilden kunde inte laddas"
@@ -175,38 +155,39 @@ exports.createProduct = (req, res) => {
             product.image.data = fs.readFileSync(files.image.path);
             product.image.contentType = files.image.type;
         }
-
-        product.save((err, result) => {
-            if (err) {
-                return res.status(400).json({
-                    error: errorHandler(err)
-                });
-            }
+        try {
+            const result = await product.save();
             res.json(result)
-        })
+        } catch(err) {
+            return res.status(400).json({
+                error: errorHandler(err)
+            })   
+        }
     });
 }
 
 
-exports.deleteProduct = (req, res) => {
+
+exports.deleteProduct = async (req, res) => {
     let product = req.product;
-    product.remove((err, product) => {
-        if (err) {
-            return res.status(400).json({
-                error: errorHandler(err)
-            });
-        }
+    try {
+        await product.remove();
         res.json({
             message: "Produkten har tagits bort"
-        });
-    })
+        });    
+    } catch(err) {
+        return res.status(400).json({
+            error: errorHandler(err)
+        });    
+    }
 }
+
 
 
 exports.updateProduct = (req, res) => {
     let form = new formidable.IncomingForm();
     form.keepExtensions = true;
-    form.parse(req, (err, fields, files) => {
+    form.parse(req, async (err, fields, files) => {
         if (err) {
             return res.status(400).json({
                 error: "Bilden kunde inte laddas"
@@ -225,20 +206,20 @@ exports.updateProduct = (req, res) => {
             product.image.data = fs.readFileSync(files.image.path);
             product.image.contentType = files.image.type;
         }
-
-        product.save((err, result) => {
-            if (err) {
-                return res.status(400).json({
-                    error: errorHandler(err)
-                });
-            }
+        try {
+            const result = await product.save();
             res.json(result)
-        })
+        } catch(err) {
+            return res.status(400).json({
+                error: errorHandler(err)
+            })   
+        }
     });    
 }
 
 
-exports.updateSoldProductQuantity = (req, res, next) => {
+
+exports.updateSoldProductQuantity = async (req, res, next) => {
     const bulkOps = req.body.order.products.map(item => {
         return {
             updateOne: {
@@ -247,12 +228,12 @@ exports.updateSoldProductQuantity = (req, res, next) => {
             }
         }
     });
-    Product.bulkWrite(bulkOps, {}, (error, result) => {
-        if (error) {
-            return res.status(400).json({
-                error: 'Produkterna kunde inte uppdateras'
-            });
-        }
-        next();
-    });
+    try {
+        await Product.bulkWrite(bulkOps, {});
+        next(); 
+    } catch(err) {
+        return res.status(400).json({
+            error: 'Produkterna kunde inte uppdateras'
+        });    
+    }
 }
