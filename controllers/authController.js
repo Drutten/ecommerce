@@ -40,8 +40,6 @@ exports.signin = async(req, res) => {
         }
         // generate token
         const token = jwt.sign({_id: user._id}, process.env.JWT_SECRET);
-        // keep token in cookie
-        res.cookie("token", token, {expire: new Date() + 9999});
         // return user and token to client
         const {_id, name, email, role} = user;
         return res.json({token, user: {_id, name, email, role}});
@@ -50,13 +48,6 @@ exports.signin = async(req, res) => {
             error: "Inloggningen misslyckades."
         })   
     }
-}
-
-
-
-exports.signout = (req, res) => {
-    res.clearCookie("token");
-    res.json({message: "Utloggad"});
 }
 
 
